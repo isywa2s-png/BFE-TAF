@@ -1,0 +1,938 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#101114">
+
+    <title>BFE-Controle | Sistema de TAF</title>
+
+    <meta
+        name="description"
+        content="Sistema de controle de pontuação, avaliação e histórico dos TAFs do BFE."
+    >
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="assets/Imagens/Favicon.png">
+
+    <!-- Fontes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- Estilos -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Supabase e scripts do sistema -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+        defer
+    ></script>
+    <script src="database.js" defer></script>
+    <script src="script.js" defer></script>
+</head>
+
+<body>
+
+    <!-- CABEÇALHO -->
+    <header class="topbar">
+        <div class="topbar-inner">
+
+            <a href="#" class="brand" aria-label="BFE-Controle - Início">
+                <div class="brand-icon">
+                    <img
+                        src="assets/Imagens/Favicon.png"
+                        alt="Logo do BFE"
+                        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                    >
+                    <span class="brand-fallback" aria-hidden="true">BFE</span>
+                </div>
+
+                <div class="brand-info">
+                    <strong>BFE<span>-CONTROLE</span></strong>
+                    <small>SISTEMA DE AVALIAÇÃO</small>
+                </div>
+            </a>
+
+            <div class="topbar-right">
+                <div class="system-status" id="connectionStatus">
+                    <span class="status-dot"></span>
+                    <span id="connectionStatusText">Conectando ao sistema...</span>
+                </div>
+
+                <div class="version-label">TAF · 2.0</div>
+            </div>
+
+        </div>
+    </header>
+
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="main-container">
+
+        <!-- APRESENTAÇÃO -->
+        <section class="welcome-section">
+
+            <div class="welcome-content">
+                <div class="eyebrow">
+                    <span class="eyebrow-line"></span>
+                    GESTÃO INTERNA · BFE
+                </div>
+
+                <h1>
+                    Controle de
+                    <span>candidatos.</span>
+                </h1>
+
+                <p>
+                    Gerencie participantes, aplique descontos em lote e acompanhe
+                    os resultados do TAF em um único lugar. As informações ficam
+                    sincronizadas com o banco de dados.
+                </p>
+            </div>
+
+            <div class="welcome-badge" aria-label="Painel de controle">
+                <div class="badge-symbol">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+
+                <div>
+                    <strong>PAINEL DE CONTROLE</strong>
+                    <small>SECRETARIA GERAL DO BFE</small>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- INDICADORES -->
+        <section class="stats-grid" aria-label="Resumo dos candidatos">
+
+            <article class="stat-card">
+                <div class="stat-top">
+                    <span class="stat-label">Total de candidatos</span>
+
+                    <div class="stat-icon icon-neutral">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="10" cy="7" r="4"/>
+                            <path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <strong class="stat-number" id="totalCandidates">0</strong>
+                <span class="stat-description">Na turma atual</span>
+            </article>
+
+
+            <article class="stat-card">
+                <div class="stat-top">
+                    <span class="stat-label">Em avaliação</span>
+
+                    <div class="stat-icon icon-blue">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9"/>
+                            <path d="M12 7v5l3 2"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <strong class="stat-number" id="activeCandidates">0</strong>
+                <span class="stat-description">Acima de 8 pontos</span>
+            </article>
+
+
+            <article class="stat-card">
+                <div class="stat-top">
+                    <span class="stat-label">Reprovados</span>
+
+                    <div class="stat-icon icon-red">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9"/>
+                            <path d="m9 9 6 6m0-6-6 6"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <strong class="stat-number" id="rejectedCandidates">0</strong>
+                <span class="stat-description">8 pontos ou menos</span>
+            </article>
+
+
+            <article class="stat-card">
+                <div class="stat-top">
+                    <span class="stat-label">Pontuação inicial</span>
+
+                    <div class="stat-icon icon-gold">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <strong class="stat-number">
+                    11<span class="stat-unit"> pts</span>
+                </strong>
+                <span class="stat-description">Para cada novo participante</span>
+            </article>
+
+        </section>
+
+
+        <!-- NOVO TAF -->
+        <section class="panel taf-management-panel" id="tafManagementSection">
+
+            <div class="panel-header">
+                <div class="panel-heading">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 3v18M3 12h18"/>
+                            <circle cx="12" cy="12" r="9"/>
+                        </svg>
+                    </div>
+
+                    <div>
+                        <h2>Gerenciamento do TAF</h2>
+                        <p>Controle a turma atual e comece uma nova avaliação quando necessário.</p>
+                    </div>
+                </div>
+
+                <span class="optional-tag" id="currentTafStatus">TAF EM ANDAMENTO</span>
+            </div>
+
+            <div class="taf-management-content">
+
+                <div class="taf-info-card">
+                    <div class="taf-info-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M4 19V5m0 14h16"/>
+                            <path d="m7 14 4-4 3 3 5-6"/>
+                        </svg>
+                    </div>
+
+                    <div>
+                        <strong>Turma atual</strong>
+                        <p id="currentTafName">TAF em andamento</p>
+                        <small>
+                            <span id="currentTafCandidateCount">0</span>
+                            participantes cadastrados
+                        </small>
+                    </div>
+                </div>
+
+                <div class="taf-action-card">
+                    <div>
+                        <strong>Iniciar outro TAF</strong>
+                        <p>
+                            Arquiva a turma atual com as pontuações finais
+                            e prepara uma nova turma.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        id="startNewTafButton"
+                        class="btn btn-danger"
+                    >
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 5v14M5 12h14"/>
+                        </svg>
+                        Iniciar outro TAF
+                    </button>
+                </div>
+
+                <div class="taf-preservation-note">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <rect x="4" y="4" width="16" height="16" rx="3"/>
+                        <path d="M8 4v5h8V4M8 20v-6h8v6"/>
+                    </svg>
+
+                    <p>
+                        <strong>Histórico preservado:</strong>
+                        ao iniciar outro TAF, os resultados da turma anterior
+                        serão arquivados para consultas futuras.
+                    </p>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- OPERAÇÕES EM LOTE -->
+        <section class="operations-section" id="operationsSection">
+
+            <div class="operations-heading">
+                <div class="eyebrow">
+                    <span class="eyebrow-line"></span>
+                    OPERAÇÕES EM LOTE
+                </div>
+
+                <h2>Gerencie vários participantes de uma vez.</h2>
+
+                <p>
+                    Cole um nick por linha. O sistema localizará os participantes
+                    da turma atual e aplicará a operação correspondente.
+                </p>
+            </div>
+
+
+            <div class="operations-grid">
+
+                <!-- CAMPO 1: ADICIONAR PARTICIPANTES -->
+                <section class="panel operation-card" id="importSection">
+
+                    <div class="operation-card-header">
+                        <div class="operation-icon operation-icon-add">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M12 5v14M5 12h14"/>
+                            </svg>
+                        </div>
+
+                        <div>
+                            <h3>Adicionar participantes</h3>
+                            <p>Cadastre os candidatos da turma.</p>
+                        </div>
+                    </div>
+
+                    <div class="operation-card-body">
+
+                        <label for="candidateInput" class="field-label">
+                            Nomes dos candidatos
+                        </label>
+
+                        <textarea
+                            id="candidateInput"
+                            class="candidate-textarea"
+                            rows="6"
+                            placeholder="Cole um nick por linha...
+
+davi6796
+rei_coro
+dinossauronovov1"
+                            spellcheck="false"
+                            autocomplete="off"
+                        ></textarea>
+
+                        <div class="textarea-footer">
+                            <span>Um nome por linha.</span>
+                            <span id="importLineCount">0 nomes detectados</span>
+                        </div>
+
+                        <div class="operation-note">
+                            <strong>+ 11 pontos</strong>
+                            <span>Novos participantes começam com 11 pontos.</span>
+                        </div>
+
+                        <button
+                            type="button"
+                            id="importButton"
+                            class="btn btn-primary operation-button"
+                        >
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M12 16V4m-5 5 5-5 5 5"/>
+                                <path d="M20 16v4H4v-4"/>
+                            </svg>
+                            Adicionar participantes
+                        </button>
+
+                        <p
+                            class="operation-feedback"
+                            id="importMessage"
+                            aria-live="polite"
+                        ></p>
+
+                    </div>
+
+                </section>
+
+
+                <!-- CAMPO 2: DESCONTAR MEIO PONTO -->
+                <section class="panel operation-card" id="deductHalfSection">
+
+                    <div class="operation-card-header">
+                        <div class="operation-icon operation-icon-half">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M5 12h14"/>
+                            </svg>
+                        </div>
+
+                        <div>
+                            <h3>Descontar 0,5 ponto</h3>
+                            <p>Aplique meio ponto de desconto em lote.</p>
+                        </div>
+                    </div>
+
+                    <div class="operation-card-body">
+
+                        <label for="deductHalfInput" class="field-label">
+                            Nomes que receberão o desconto
+                        </label>
+
+                        <textarea
+                            id="deductHalfInput"
+                            class="candidate-textarea"
+                            rows="6"
+                            placeholder="Cole um nick por linha...
+
+davi6796
+rei_coro"
+                            spellcheck="false"
+                            autocomplete="off"
+                        ></textarea>
+
+                        <div class="textarea-footer">
+                            <span>Um nome por linha.</span>
+                            <span id="deductHalfLineCount">0 nomes detectados</span>
+                        </div>
+
+                        <div class="operation-note operation-note-warning">
+                            <strong>− 0,5 ponto</strong>
+                            <span>Os pontos serão atualizados na lista.</span>
+                        </div>
+
+                        <button
+                            type="button"
+                            id="deductHalfButton"
+                            class="btn btn-secondary operation-button"
+                        >
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M5 12h14"/>
+                            </svg>
+                            Aplicar desconto de 0,5
+                        </button>
+
+                        <p
+                            class="operation-feedback"
+                            id="deductHalfMessage"
+                            aria-live="polite"
+                        ></p>
+
+                    </div>
+
+                </section>
+
+
+                <!-- CAMPO 3: DESCONTAR UM PONTO -->
+                <section class="panel operation-card" id="deductOneSection">
+
+                    <div class="operation-card-header">
+                        <div class="operation-icon operation-icon-one">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M12 5v14M5 12h14"/>
+                            </svg>
+                        </div>
+
+                        <div>
+                            <h3>Descontar 1 ponto</h3>
+                            <p>Aplique um ponto de desconto em lote.</p>
+                        </div>
+                    </div>
+
+                    <div class="operation-card-body">
+
+                        <label for="deductOneInput" class="field-label">
+                            Nomes que receberão o desconto
+                        </label>
+
+                        <textarea
+                            id="deductOneInput"
+                            class="candidate-textarea"
+                            rows="6"
+                            placeholder="Cole um nick por linha...
+
+davi6796
+rei_coro"
+                            spellcheck="false"
+                            autocomplete="off"
+                        ></textarea>
+
+                        <div class="textarea-footer">
+                            <span>Um nome por linha.</span>
+                            <span id="deductOneLineCount">0 nomes detectados</span>
+                        </div>
+
+                        <div class="operation-note operation-note-danger">
+                            <strong>− 1 ponto</strong>
+                            <span>Os pontos serão atualizados na lista.</span>
+                        </div>
+
+                        <button
+                            type="button"
+                            id="deductOneButton"
+                            class="btn btn-primary operation-button"
+                        >
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M5 12h14"/>
+                            </svg>
+                            Aplicar desconto de 1 ponto
+                        </button>
+
+                        <p
+                            class="operation-feedback"
+                            id="deductOneMessage"
+                            aria-live="polite"
+                        ></p>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+            <div class="bulk-rules-note">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 3 4 6v5c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6l-8-3z"/>
+                    <path d="M12 8v4m0 4h.01"/>
+                </svg>
+
+                <p>
+                    <strong>Regra de reprovação:</strong>
+                    ao atingir 8 pontos ou menos, o candidato será marcado
+                    como reprovado. Participantes reprovados não receberão
+                    novos descontos. Cada nick será processado apenas uma vez
+                    por operação em lote.
+                </p>
+            </div>
+
+        </section>
+
+
+        <!-- LISTA DE CANDIDATOS -->
+        <section class="panel candidates-panel" id="candidatesSection">
+
+            <div class="panel-header candidates-header">
+
+                <div class="panel-heading">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M8 6h13M8 12h13M8 18h13"/>
+                            <path d="M3 6h.01M3 12h.01M3 18h.01"/>
+                        </svg>
+                    </div>
+
+                    <div>
+                        <h2>Lista de candidatos</h2>
+                        <p>Consulte a pontuação e a situação de cada participante.</p>
+                    </div>
+                </div>
+
+                <button
+                    type="button"
+                    id="exportButton"
+                    class="btn btn-secondary"
+                    title="Exportar a lista da turma atual"
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 3v12m-5-5 5 5 5-5"/>
+                        <path d="M5 17v4h14v-4"/>
+                    </svg>
+                    Exportar lista
+                </button>
+
+            </div>
+
+
+            <!-- PESQUISA E FILTROS -->
+            <div class="list-toolbar">
+
+                <div class="search-box">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="11" cy="11" r="7"/>
+                        <path d="m16 16 4 4"/>
+                    </svg>
+
+                    <input
+                        type="search"
+                        id="searchInput"
+                        placeholder="Pesquisar pelo nick do candidato..."
+                        autocomplete="off"
+                        aria-label="Pesquisar candidatos pelo nick"
+                    >
+
+                    <kbd>CTRL + K</kbd>
+                </div>
+
+                <div class="filter-group" aria-label="Filtrar candidatos">
+
+                    <button
+                        type="button"
+                        class="filter-btn active"
+                        data-filter="all"
+                        aria-pressed="true"
+                    >
+                        Todos
+                        <span id="filterAllCount">0</span>
+                    </button>
+
+                    <button
+                        type="button"
+                        class="filter-btn"
+                        data-filter="active"
+                        aria-pressed="false"
+                    >
+                        Em avaliação
+                    </button>
+
+                    <button
+                        type="button"
+                        class="filter-btn"
+                        data-filter="rejected"
+                        aria-pressed="false"
+                    >
+                        Reprovados
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- TABELA -->
+            <div class="table-container">
+
+                <table class="candidates-table">
+
+                    <thead>
+                        <tr>
+                            <th scope="col" class="col-number">Nº</th>
+                            <th scope="col">CANDIDATO</th>
+                            <th scope="col" class="col-points">PONTUAÇÃO</th>
+                            <th scope="col" class="col-status">SITUAÇÃO</th>
+                            <th scope="col" class="col-actions">GERENCIAR PONTOS</th>
+                            <th scope="col" class="col-remove">AÇÕES</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="candidateList">
+                        <!-- As linhas serão criadas pelo script.js -->
+                    </tbody>
+
+                </table>
+
+
+                <!-- ESTADO VAZIO -->
+                <div class="empty-state" id="emptyState">
+
+                    <div class="empty-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <circle cx="11" cy="11" r="7"/>
+                            <path d="m16 16 4 4"/>
+                        </svg>
+                    </div>
+
+                    <h3>Nenhum candidato encontrado</h3>
+
+                    <p>
+                        Adicione os nomes no campo de participantes
+                        ou altere os termos da pesquisa.
+                    </p>
+
+                    <button
+                        type="button"
+                        class="btn btn-secondary"
+                        id="emptyImportButton"
+                    >
+                        Adicionar participantes
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- RODAPÉ DA TABELA -->
+            <div class="table-footer">
+
+                <div class="table-summary">
+                    Exibindo
+                    <strong id="visibleCount">0</strong>
+                    de
+                    <strong id="footerTotalCount">0</strong>
+                    candidatos
+                </div>
+
+                <div class="table-legend">
+                    <span class="legend-item">
+                        <span class="legend-dot legend-active"></span>
+                        Em avaliação
+                    </span>
+
+                    <span class="legend-item">
+                        <span class="legend-dot legend-rejected"></span>
+                        Reprovado
+                    </span>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- HISTÓRICO DE TURMAS ARQUIVADAS -->
+        <section class="panel archived-tafs-panel" id="archivedTafsSection">
+
+            <div class="panel-header">
+
+                <div class="panel-heading">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M3 7h18v14H3z"/>
+                            <path d="M1 3h22v4H1z"/>
+                            <path d="M10 12h4"/>
+                        </svg>
+                    </div>
+
+                    <div>
+                        <h2>Histórico de TAFs</h2>
+                        <p>Consulte turmas arquivadas, pontuações finais e resultados anteriores.</p>
+                    </div>
+                </div>
+
+                <span class="optional-tag" id="archivedTafCount">0 TURMAS</span>
+
+            </div>
+
+            <div class="archived-tafs-content">
+
+                <div class="archived-tafs-list" id="archivedTafsList">
+                    <!-- As turmas arquivadas serão exibidas pelo script.js -->
+                </div>
+
+                <div class="archived-tafs-empty" id="archivedTafsEmpty">
+                    <div class="empty-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M3 7h18v14H3z"/>
+                            <path d="M1 3h22v4H1z"/>
+                            <path d="M10 12h4"/>
+                        </svg>
+                    </div>
+
+                    <h3>Nenhum TAF arquivado</h3>
+
+                    <p>
+                        Quando você iniciar outro TAF, a turma anterior
+                        aparecerá aqui para consultas futuras.
+                    </p>
+                </div>
+
+                <div
+                    class="archived-taf-details"
+                    id="archivedTafDetails"
+                    hidden
+                >
+                    <!-- Detalhes da turma selecionada serão exibidos pelo script.js -->
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- HISTÓRICO DE ALTERAÇÕES -->
+        <section class="panel history-panel" id="historySection">
+
+            <div class="panel-header">
+
+                <div class="panel-heading">
+                    <div class="section-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/>
+                            <path d="M3 3v5h5"/>
+                            <path d="M12 7v5l3 2"/>
+                        </svg>
+                    </div>
+
+                    <div>
+                        <h2>Histórico de alterações</h2>
+                        <p>Acompanhe os descontos e as operações realizadas na turma atual.</p>
+                    </div>
+                </div>
+
+                <button
+                    type="button"
+                    id="clearHistoryButton"
+                    class="btn btn-text"
+                >
+                    Limpar histórico de alterações
+                </button>
+
+            </div>
+
+            <div class="history-list" id="historyList">
+                <!-- Os registros serão adicionados pelo script.js -->
+            </div>
+
+            <div class="history-empty" id="historyEmpty">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 8v4l3 2"/>
+                    <circle cx="12" cy="12" r="9"/>
+                </svg>
+
+                <span>Nenhuma alteração registrada até o momento.</span>
+            </div>
+
+        </section>
+
+
+        <!-- REGRAS -->
+        <section class="rules-panel">
+
+            <div class="rules-heading">
+                <div class="rules-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 3 4 6v5c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6l-8-3z"/>
+                        <path d="m9 12 2 2 4-4"/>
+                    </svg>
+                </div>
+
+                <div>
+                    <h2>Regras de pontuação</h2>
+                    <p>Critérios utilizados durante a avaliação.</p>
+                </div>
+            </div>
+
+            <div class="rules-grid">
+
+                <div class="rule-item">
+                    <span class="rule-number">01</span>
+                    <div>
+                        <strong>Pontuação inicial</strong>
+                        <p>Todo participante começa com 11 pontos.</p>
+                    </div>
+                </div>
+
+                <div class="rule-item">
+                    <span class="rule-number">02</span>
+                    <div>
+                        <strong>Descontos em lote</strong>
+                        <p>É possível descontar 0,5 ou 1 ponto de vários participantes.</p>
+                    </div>
+                </div>
+
+                <div class="rule-item">
+                    <span class="rule-number">03</span>
+                    <div>
+                        <strong>Limite de reprovação</strong>
+                        <p>Ao atingir 8 pontos ou menos, o candidato é reprovado.</p>
+                    </div>
+                </div>
+
+                <div class="rule-item">
+                    <span class="rule-number">04</span>
+                    <div>
+                        <strong>Histórico preservado</strong>
+                        <p>Ao iniciar outro TAF, a turma anterior será arquivada.</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- AVISO DE ARMAZENAMENTO -->
+        <div class="storage-notice">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="4" y="4" width="16" height="16" rx="3"/>
+                <path d="M8 4v5h8V4M8 20v-6h8v6"/>
+            </svg>
+
+            <p>
+                <strong>Banco de dados online:</strong>
+                os participantes, as pontuações e as turmas arquivadas
+                serão armazenados no Supabase para permitir consultas
+                e sincronização entre dispositivos.
+            </p>
+        </div>
+
+    </main>
+
+
+    <!-- RODAPÉ -->
+    <footer class="footer">
+
+        <div class="footer-inner">
+
+            <div class="footer-brand">
+                <strong>BFE<span>-CONTROLE</span></strong>
+                <small>Sistema interno de gestão de candidatos.</small>
+            </div>
+
+            <div class="footer-right">
+                <span>Desenvolvido para o BFE</span>
+                <span class="footer-separator">•</span>
+                <span>2026</span>
+            </div>
+
+        </div>
+
+    </footer>
+
+
+    <!-- MODAL DE CONFIRMAÇÃO -->
+    <div
+        class="confirm-modal"
+        id="confirmModal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirmModalTitle"
+        aria-describedby="confirmModalText"
+        hidden
+    >
+        <div class="confirm-modal-backdrop" data-close-modal="true"></div>
+
+        <div class="confirm-modal-card">
+
+            <div class="confirm-modal-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 9v4m0 4h.01"/>
+                    <path d="M10.3 3.9 2.6 17.2A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.8L13.7 3.9a2 2 0 0 0-3.4 0Z"/>
+                </svg>
+            </div>
+
+            <h2 id="confirmModalTitle">Confirmar ação</h2>
+
+            <p id="confirmModalText">
+                Deseja realmente continuar com esta operação?
+            </p>
+
+            <div class="confirm-modal-actions">
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    id="confirmModalCancel"
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    type="button"
+                    class="btn btn-primary"
+                    id="confirmModalConfirm"
+                >
+                    Confirmar
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- NOTIFICAÇÕES -->
+    <div
+        id="toastContainer"
+        class="toast-container"
+        aria-live="polite"
+        aria-atomic="false"
+    ></div>
+
+</body>
+</html>
